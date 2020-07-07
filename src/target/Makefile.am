@@ -46,7 +46,8 @@ TARGET_CORE_SRC = \
 	%D%/target_request.c \
 	%D%/testee.c \
 	%D%/semihosting_common.c \
-	%D%/smp.c
+	%D%/smp.c \
+	%D%/rtt.c
 
 ARMV4_5_SRC = \
 	%D%/armv4_5.c \
@@ -254,7 +255,8 @@ ARC32_SRC = \
 	%D%/esirisc.h \
 	%D%/esirisc_jtag.h \
 	%D%/esirisc_regs.h \
-	%D%/esirisc_trace.h
+	%D%/esirisc_trace.h \
+	%D%/rtt.h
 
 PULPINO_SRC = \
 	%D%/rv32m1/rv32m1_tap_mohor.c \
