@@ -523,13 +523,24 @@ COMMAND_HANDLER(nrf91_handle_mass_erase_command)
 	return ERROR_OK;
 }
 
-static const struct command_registration nrf91_command_handlers[] = {
+static const struct command_registration nrf91_exec_command_handlers[] = {
 	{
 		.name		= "mass_erase",
 		.handler	= nrf91_handle_mass_erase_command,
 		.mode		= COMMAND_EXEC,
 		.help		= "Erase all flash contents of the chip.",
 		.usage		= "",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration nrf91_command_handlers[] = {
+	{
+		.name	= "nrf91",
+		.mode	= COMMAND_ANY,
+		.help	= "nrf91 flash command group",
+		.usage	= "",
+		.chain	= nrf91_exec_command_handlers,
 	},
 	COMMAND_REGISTRATION_DONE
 };
