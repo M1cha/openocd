@@ -117,6 +117,10 @@ static int nrf91_wait_for_nvmc(nrf91_chip_t *chip)
 
 	do {
 		res = target_read_u32(chip->target, NRF91_NVMC_READY, &ready);
+		if (res != ERROR_OK) {
+			LOG_ERROR("Failed to read NVMC_READY");
+			return res;
+		}
 
 		if (ready == 0x00000001)
 		{
@@ -210,14 +214,14 @@ static int nrf91_protect_check(struct flash_bank *bank)
 	nrf91_chip_t *chip = bank->driver_priv;
 	assert(chip != NULL);
 
-	for (int i = 0; i < bank->num_sectors; i++)
+	for (unsigned int i = 0; i < bank->num_sectors; i++)
 		bank->sectors[i].is_protected =
 			clenr0 != 0xFFFFFFFF && bank->sectors[i].offset < clenr0;
 
 	return ERROR_OK;
 }
 
-static int nrf91_protect(struct flash_bank *bank, int set, int first, int last)
+static int nrf91_protect(struct flash_bank *bank, int set, unsigned int first, unsigned int last)
 {
 	nrf91_chip_t *chip = get_active_chip(bank);
 
@@ -270,7 +274,7 @@ static int nrf91_read_ficr_info(nrf91_chip_t *chip)
 	return ERROR_OK;
 }
 
-static int nrf91_info(struct flash_bank *bank, char *buf, int buf_size)
+static int nrf91_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	nrf91_chip_t *chip = bank->driver_priv;
 	int res = ERROR_OK;
@@ -279,12 +283,11 @@ static int nrf91_info(struct flash_bank *bank, char *buf, int buf_size)
 		res = nrf91_read_ficr_info(chip);
 	}
 
-	LOG_INFO("nrf91_info buf_size %u", buf_size);
 	if (res == ERROR_OK) {
 		char variant[5];
 		memcpy(variant, &chip->ficr_info.variant, 4);
 		variant[4] = 0;
-		snprintf(buf, buf_size,
+		command_print_sameline(cmd,
 				"nRF%X-%s, %uKB FLASH, %uKB RAM, DevId : 0x%016" PRIX64,
 				chip->ficr_info.part, variant,
 				chip->ficr_info.flash, chip->ficr_info.ram,
@@ -304,16 +307,6 @@ static int nrf91_probe(struct flash_bank *bank)
 		LOG_INFO("Unknown device");
 
 		return ERROR_FAIL;
-	}
-
-	if (!chip->probed) {
-		char buf[80];
-		nrf91_info(bank, buf, sizeof(buf));
-		if (!chip->ficr_info_valid) {
-			LOG_INFO("Unknown device: %s", buf);
-		} else {
-			LOG_INFO("%s", buf);
-		}
 	}
 
 	free(bank->sectors);
@@ -427,7 +420,7 @@ static int nrf91_write(struct flash_bank *bank, const uint8_t *buffer,
 	return res;
 }
 
-static int nrf91_erase(struct flash_bank *bank, int first, int last)
+static int nrf91_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
 {
 	int res = ERROR_OK;
 	nrf91_chip_t *chip = get_active_chip(bank);
@@ -438,7 +431,7 @@ static int nrf91_erase(struct flash_bank *bank, int first, int last)
 	}
 
 	/* For each sector to be erased */
-	for (int s = first; s <= last && res == ERROR_OK; s++)
+	for (unsigned int s = first; s <= last && res == ERROR_OK; s++)
 		res = nrf91_erase_page(bank, chip, &bank->sectors[s]);
 
 	return res;
